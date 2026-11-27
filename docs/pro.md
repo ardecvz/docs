@@ -1,5 +1,5 @@
 ---
 layout: TestProLayout
 title: "TestPro: TestProf for AI agents"
-description: "TestProf plus the secret sauce for AI agents. Your agent knows where to look and what to fix. Battle-tested profilers prove the speedup is real."
+description: "Make your Rails test suite 2x faster with the AI agent you already use. TestPro gives your agent TestProf's profilers, a catalog of known slow-test causes and the playbooks to fix them."
 ---
