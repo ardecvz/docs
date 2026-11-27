@@ -176,7 +176,7 @@
  * Component: Nav (TestPro stamp)
  * -------------------------------------------------------------------------- */
 
-.nav-soon {
+.nav-stamp {
   display: inline-block;
   margin-left: 6px;
   padding: 2px 4px 1px;
@@ -194,30 +194,26 @@
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.18);
 }
 
-.nav-soon span {
+.nav-stamp span {
   display: inline-block;
-  animation: nav-soon-hop 0.4s ease-out calc(1s + var(--i, 0) * 60ms);
+  animation: nav-stamp-hop 0.4s ease-out calc(1s + var(--i, 0) * 60ms);
 }
 
-.nav-soon span:nth-child(2) { --i: 1; }
-.nav-soon span:nth-child(3) { --i: 2; }
-.nav-soon span:nth-child(4) { --i: 3; }
+.nav-stamp .gap {
+  width: 0.4em;
+}
 
-@keyframes nav-soon-hop {
+@keyframes nav-stamp-hop {
   40% { transform: translateY(-3px) rotate(-8deg); animation-timing-function: ease-in; }
   100% { transform: none; }
 }
 
-.VPNavBarMenuLink.active .nav-soon span {
+.VPNavBarMenuLink.active .nav-stamp span {
   animation: none;
 }
 
-.VPNavBarMenuLink.active .nav-soon.hop span {
-  animation: nav-soon-hop 0.4s ease-out calc(var(--i, 0) * 60ms);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .nav-soon span {
+  .nav-stamp span {
     animation: none !important;
   }
 }
