@@ -80,7 +80,7 @@
   --vp-c-brand-soft: rgba(160, 136, 173, 0.16);
 
   --vp-c-text-1: rgba(255, 255, 255, 0.87);
-  --vp-c-text-2: rgba(235, 235, 245, 0.6);
+  --vp-c-text-2: rgba(235, 235, 245, 0.72);
 }
 
 /**
@@ -90,13 +90,20 @@
 :root {
   --vp-button-brand-border: transparent;
   --vp-button-brand-text: var(--vp-c-white);
-  --vp-button-brand-bg: var(--vp-c-brand-3);
+  --vp-button-brand-bg: #5f3f73;
   --vp-button-brand-hover-border: transparent;
   --vp-button-brand-hover-text: var(--vp-c-white);
-  --vp-button-brand-hover-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-bg: #4e3360;
   --vp-button-brand-active-border: transparent;
   --vp-button-brand-active-text: var(--vp-c-white);
-  --vp-button-brand-active-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-bg: #452c55;
+}
+
+/* Filled buttons keep white text at 4.5:1 or better in both themes. */
+.dark {
+  --vp-button-brand-bg: #8a5aa8;
+  --vp-button-brand-hover-bg: #9b6bb9;
+  --vp-button-brand-active-bg: #7a4c97;
 }
 
 /**
@@ -234,10 +241,6 @@
 .pro-page .VPNavScreenTranslations,
 .pro-page .VPNavBarExtra .translations {
   display: none;
-}
-
-.dark .pro-page {
-  --vp-c-text-2: rgba(235, 235, 245, 0.72);
 }
 
 .dark .nav-stamp {

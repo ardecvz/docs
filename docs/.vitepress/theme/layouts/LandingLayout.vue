@@ -281,12 +281,12 @@ onMounted(() => {
 }
 
 .btn-brand {
-  background-color: var(--vp-c-brand-3);
-  color: var(--vp-c-white);
+  background-color: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
 }
 
 .btn-brand:hover {
-  background-color: var(--vp-c-brand-1);
+  background-color: var(--vp-button-brand-hover-bg);
 }
 
 .btn-alt {
@@ -661,12 +661,5 @@ onMounted(() => {
   display: inline;
 }
 
-.dark .btn-brand {
-  background-color: #8a5aa8;
-  color: #fff;
-}
 
-.dark .btn-brand:hover {
-  background-color: #9b6bb9;
-}
 </style>

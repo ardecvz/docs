@@ -258,8 +258,8 @@ const paybackWeeks = computed(() =>
   margin-top: 20px;
   padding: 11.5px 24px 8.5px;
   border-radius: 8px;
-  background-color: #5f3f73;
-  color: #fff;
+  background-color: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
   font-size: 0.95rem;
   font-weight: 600;
   line-height: 1.5;
@@ -267,13 +267,9 @@ const paybackWeeks = computed(() =>
 }
 
 .calc-buy:hover {
-  background-color: #4e3360;
+  background-color: var(--vp-button-brand-hover-bg);
 }
 
-.dark .calc-buy {
-  background-color: #c4a8d4;
-  color: #1b1520;
-}
 
 .calc {
   align-items: start;
@@ -293,8 +289,4 @@ const paybackWeeks = computed(() =>
   margin-top: 8px;
 }
 
-.dark .calc-buy {
-  background-color: #8a5aa8;
-  color: #fff;
-}
 </style>

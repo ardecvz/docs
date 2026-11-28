@@ -614,12 +614,12 @@ test-pro install</code></pre>
 }
 
 .btn-brand {
-  background-color: var(--vp-c-brand-3);
-  color: var(--vp-c-white);
+  background-color: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
 }
 
 .btn-brand:hover {
-  background-color: var(--vp-c-brand-1);
+  background-color: var(--vp-button-brand-hover-bg);
 }
 
 .btn-alt {
@@ -1524,14 +1524,7 @@ test-pro install</code></pre>
   font-size: 2.4rem;
 }
 
-.btn-brand {
-  background-color: #5f3f73;
-  color: #fff;
-}
 
-.btn-brand:hover {
-  background-color: #4e3360;
-}
 
 .hero-note {
   margin: 0;
@@ -1817,14 +1810,7 @@ test-pro install</code></pre>
   font-variant-numeric: tabular-nums;
 }
 
-.dark .btn-brand {
-  background-color: #8a5aa8;
-  color: #fff;
-}
 
-.dark .btn-brand:hover {
-  background-color: #9b6bb9;
-}
 
 @media (max-width: 960px) {
   .hero-inner {
