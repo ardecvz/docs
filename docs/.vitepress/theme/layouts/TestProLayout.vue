@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import TestProCalculator from '../components/TestProCalculator.vue'
 
 // Eval bench results: geometric mean speed-up of 3 trials per app and arm.
@@ -38,19 +38,51 @@ const gain = (result: (typeof benchResults)[number]) => `${Math.round((result.pr
 // Median agent minutes per run.
 const agentMinutes = { alone: 40, pro: 34 }
 
+// Cyber week: 50% off the first year until the end of 11 Dec 2026, Pacific time.
+// Checked again in the browser, so the regular prices come back without a rebuild.
+const PROMO_ENDS_AT = Date.parse('2026-12-12T08:00:00Z')
+const promoActive = ref(Date.now() < PROMO_ENDS_AT)
+
+// Launch: 1 Dec 2026, midnight Pacific. The hero stamp reads "New" from then on.
+const LAUNCH_AT = Date.parse('2026-12-01T08:00:00Z')
+const launched = ref(Date.now() >= LAUNCH_AT)
+onMounted(() => {
+  promoActive.value = Date.now() < PROMO_ENDS_AT
+  launched.value = Date.now() >= LAUNCH_AT
+})
+
+// Stripe Payment Links, one per plan (yearly subscriptions). Paste the live URLs here.
+// During cyber week the link pre-fills the promotion code; Stripe checks its expiry too.
+const CHECKOUT = {
+  starter: 'https://buy.stripe.com/cNi14n7KUeHc8tM8hSdUY04',
+  team: 'https://buy.stripe.com/bJedR9fdm42ybFYaq0dUY03',
+  business: 'https://buy.stripe.com/bJe8wP2qAbv0h0i55GdUY02',
+}
+const PROMO_CODE = 'CYBER50'
+const checkoutUrl = (plan: keyof typeof CHECKOUT) =>
+  promoActive.value ? `${CHECKOUT[plan]}?prefilled_promo_code=${PROMO_CODE}` : CHECKOUT[plan]
+
 const playing = ref(false)
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const clip = [
   { kind: 'prompt', text: '> Our test suite is slow. Make it faster.' },
   { kind: 'step', text: '● Baseline: 3:32, all green' },
-  { kind: 'step', text: '● Using TestProf: EventProf, FactoryProf, TPSProf...' },
+  { kind: 'step', text: '● Profiling where the time goes...' },
   { kind: 'step', text: '● Checking for known issues...' },
   { kind: 'step', text: '● Optimizing files, applying best practice fixes...' },
   { kind: 'step', text: '● Writing a project skill to prevent future slow tests...' },
   { kind: 'done', text: 'Tests 4.6x faster: 3:32 -> 0:46, all green' },
 ]
 const clipStep = ref(0)
+// The timer in the terminal bar runs from the baseline to the result as the steps appear.
+const CLIP_FROM = 212
+const CLIP_TO = 46
+const timerText = computed(() => {
+  const share = Math.min(1, Math.max(0, (clipStep.value - 1) / (clip.length - 2)))
+  const seconds = Math.round(CLIP_FROM - (CLIP_FROM - CLIP_TO) * share)
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+})
 const CLIP_FALLBACK_MS = 2000
 let clipTimer: number | undefined
 
@@ -82,42 +114,24 @@ onBeforeUnmount(() => {
   window.clearInterval(clipTimer)
 })
 
-const access = ref<'idle' | 'sending' | 'done' | 'error'>('idle')
-
-const requestAccess = async (event: SubmitEvent) => {
-  const fields = [...new FormData(event.target as HTMLFormElement)].map(([name, value]) => [name, String(value)])
-  access.value = 'sending'
-  try {
-    const response = await fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(fields).toString(),
-    })
-    access.value = response.ok ? 'done' : 'error'
-  } catch {
-    access.value = 'error'
-  }
+const goToPricing = () => {
+  document.getElementById('pricing')?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+  history.replaceState(null, '', '#pricing')
 }
-
-const goToAccess = () => {
-  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
-  const target = document.getElementById('access-email') ?? document.getElementById('access-note')
-  target?.focus({ preventScroll: true })
-}
-
-const parts = [
-  { kind: 'direction', title: 'Index', text: 'The usual reasons Rails tests are slow and how to spot each one, so the agent gets to the fixes faster.' },
-  { kind: 'context', title: 'Playbooks', text: 'How to land the big wins, like <code>let_it_be</code> and FactoryDefault, without breaking a single spec.' },
-  { kind: 'verification', title: 'TestProf', text: 'The battle-tested profilers. They show where the time goes and prove the speedup is real.' },
-]
 
 const faq = [
-  { q: 'What does it work with?', a: 'Rails apps with RSpec or Minitest, and any agent that speaks MCP: Claude Code, Codex, Cursor, OpenCode and more.' },
-  { q: 'Does it change my app?', a: 'Fixes stay in the test environment: test config, test support, factories and specs. App code changes only when a fix needs one and it affects tests only, and each is listed in the summary.' },
+  { q: 'What does it work with?', a: 'Rails apps with RSpec or Minitest. Agents: Claude Code, Codex, Cursor and OpenCode, or any other MCP client. The agent installs anything else it needs.' },
+  { q: 'What exactly do I install?', a: 'A private gem from GitHub Packages, installed with a token: on each developer\'s machine, or in your Gemfile for the whole team. Running test-pro install adds the TestPro MCP server and its skill to your agent\'s config.' },
+  { q: 'Does it change my app?', a: 'Fixes stay on the test side: test config, spec support, factories and specs. App code changes only when a fix leaves the app\'s behavior the same, for example a setting that applies in tests only. The summary lists every app change.' },
+  { q: 'Will it break my tests?', a: 'No test is skipped or removed and no assertion is weakened. Each fix is kept only after the suite passes with it. Tests that already failed before the run are recorded as known failures, and flaky ones are listed in the summary.' },
+  { q: 'How long does a run take?', a: 'As long as you allow. Without a budget, the agent gets about 15 times your suite\'s run time, 30 minutes at least, and starts wrapping up at 80% of it. In our benchmark a run took 34 minutes on average.' },
   { q: 'Does my code leave my machine?', a: 'The gem sends nothing anywhere. The whole catalog ships inside the gem, so your agent reads it locally. Your agent\'s model provider sees what it always sees.' },
   { q: 'What if my suite is already fast?', a: 'Run it once: it follows TestProf\'s own profiling flow and shows whether there is time left to win. If it finds nothing worth keeping, ask for the refund.' },
-  { q: 'Why pay every month after the first run?', a: 'Your app keeps moving: new gems, Rails upgrades, new kinds of tests. We keep the catalog of known slowdowns and their fixes up to date, so every rerun knows the latest tricks.' },
-  { q: 'How is it different from TestProf?', a: 'TestProf is the open-source toolbox and always stays free. TestPro is the official guide to using it, from the TestProf team, packaged for agents.' },
+  { q: 'Why pay every year after the first run?', a: 'Your app keeps moving: new gems, Rails upgrades, new kinds of tests. Each new version of the gem brings new causes and fixes to the catalog, so a rerun after an upgrade or a burst of new specs finds what changed.' },
+  { q: 'What happens if I don\'t renew?', a: 'Everything the runs produced stays in your repo: the fixes, the summaries and the project skill. New versions of the gem need an active subscription.' },
+  { q: 'How is it different from TestProf?', a: 'TestProf is the open-source toolbox and always stays free. TestPro is the gem your agent works through: the catalog of known causes, the playbooks, and tools that make the agent measure every fix before keeping it. Both come from the TestProf team.' },
+  { q: 'Who counts as a developer?', a: 'Your engineering headcount, as you count it. We don\'t check; we trust you.' },
+  { q: 'We have more than 100 developers. Which plan fits?', a: 'The speedup sprint. It includes 12 months of TestPro for your whole engineering team, with no developer cap, and our engineers work on your suite with you for 2 to 3 weeks. After the first year, the licence renews at $9,900 a year.' },
   { q: 'Can I run it in CI?', a: 'Yes. The gem installs with a token, like other private gems. Install it in the CI job and run your agent headless there, so new slow tests do not creep in.' },
 ]
 </script>
@@ -130,60 +144,34 @@ const faq = [
         <div class="hero-copy">
           <span class="title" aria-hidden="true">
             TestPro<span class="f">f</span>
-            <span class="stamp" @animationstart="playClip">Early access</span>
+            <span class="stamp" @animationstart="playClip">{{ launched ? 'New' : 'Early access' }}</span>
           </span>
 
-          <h1>Make your Rails test suite 2x faster. Automagically.</h1>
+          <h1>Your coding agents run your tests 3 to 10 times per task. Make them twice as fast.</h1>
 
           <p class="hero-lead">
-            <span>TestProf plus the secret sauce for AI agents.</span>
-            <span>Your agent knows where to look and what to fix.</span>
-            <span>Battle-tested profilers prove the speedup is real.</span>
+            Install one gem, ask Claude Code, Codex or Cursor to speed up your Rails tests, and review a branch where every fix is measured.
           </p>
 
           <div class="hero-actions">
-            <form
-              v-if="access !== 'done'"
-              class="access"
-              name="testpro-waitlist"
-              method="POST"
-              @submit.prevent="requestAccess"
-            >
-              <input type="hidden" name="form-name" value="testpro-waitlist" />
-              <p class="visually-hidden" aria-hidden="true">
-                <label>Leave this empty <input name="bot" tabindex="-1" autocomplete="off" /></label>
-              </p>
-              <label class="visually-hidden" for="access-email">Email</label>
-              <input
-                id="access-email"
-                class="access-email"
-                type="email"
-                name="email"
-                required
-                autocomplete="email"
-                placeholder="you@example.com"
-              />
-              <button class="btn btn-brand" type="submit" :disabled="access === 'sending'">Get free access</button>
-            </form>
-
-            <p
-              id="access-note"
-              class="access-note"
-              :class="[access, { under: access === 'idle' || access === 'sending' }]"
-              role="status"
-              tabindex="-1"
-            >
-              <template v-if="access === 'done'">Done. We'll email you an invite.</template>
-              <template v-else-if="access === 'error'">Something went wrong. Please try again.</template>
-              <template v-else>Free during early access.</template>
-            </p>
+            <a class="btn btn-brand" href="#pricing" @click.prevent="goToPricing">See plans</a>
+            <p class="hero-note">From $395 a year</p>
           </div>
+
+          <ul class="assurances">
+            <li>Every test stays green, every assertion kept</li>
+            <li>Your code stays on your machine</li>
+            <li>Not faster? Full refund within 14 days</li>
+          </ul>
+
+          <p class="hero-proof">From the team behind TestProf, the open-source Rails test profiler used by GitLab and Discourse.</p>
         </div>
 
         <div class="terminal">
           <div class="terminal-bar">
             <span class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></span>
             <span class="terminal-title" aria-hidden="true">claude</span>
+            <span class="terminal-timer" :class="{ done: clipStep >= clip.length }" aria-hidden="true">{{ timerText }}</span>
           </div>
           <div
             class="terminal-body"
@@ -195,7 +183,39 @@ const faq = [
               :key="i"
               class="terminal-line"
               :class="[`line-${line.kind}`, { shown: clipStep > i }]"
-            ><span v-if="line.kind === 'done'" class="check">✓ </span>{{ line.text }}</p>
+            ><template v-if="line.kind === 'done'"><span class="check">✓ </span>Tests 4.6x faster, all green<span class="result"><s>3:32</s> 0:46</span></template><template v-else>{{ line.text }}</template></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What you get -->
+    <section class="band">
+      <div class="inner">
+        <h2>What you get</h2>
+        <p class="section-lead">A private gem your agent works through. Install it once, ask your agent to make the tests faster, and review the branch it hands back.</p>
+        <div class="grid-3 get-steps">
+          <div class="card">
+            <p class="get-step">1. Install</p>
+            <pre class="get-code"><code>gem install test-pro \
+  --source &lt;your private URL&gt;
+test-pro install</code></pre>
+            <p>Sets up Claude Code, Codex, Cursor or OpenCode: the TestPro MCP server and its skill. Or add the gem to your Gemfile for the whole team.</p>
+          </div>
+          <div class="card">
+            <p class="get-step">2. Ask your agent</p>
+            <pre class="get-code"><code>&gt; Our test suite is slow.
+  Make it faster.</code></pre>
+            <p>The agent checks your code against 40 known causes of slow Rails tests, runs TestProf's profilers and measures every fix before it keeps it. You set the time budget.</p>
+          </div>
+          <div class="card">
+            <p class="get-step">3. Review the branch</p>
+            <ul class="get-list">
+              <li>One commit per verified fix</li>
+              <li>A summary: before and after times, each fix, flaky tests found, what is left to win</li>
+              <li>A decision log: why each fix was kept or declined</li>
+              <li>A project skill, so your agents write fast specs from now on</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -284,24 +304,11 @@ const faq = [
       </div>
     </section>
 
-    <!-- Secret sauce -->
-    <section class="band soft">
-      <div class="inner">
-        <h2>The secret sauce</h2>
-        <div class="grid-3">
-          <div v-for="part in parts" :key="part.kind" class="card part">
-            <h3><span class="part-kind" :class="`kind-${part.kind}`">{{ part.kind }}</span>{{ part.title }}</h3>
-            <p v-html="part.text"></p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Calculator -->
     <section class="band">
       <div class="inner">
         <h2>What slow tests cost you</h2>
-        <TestProCalculator />
+        <TestProCalculator :checkout-url="checkoutUrl" />
       </div>
     </section>
 
@@ -310,39 +317,118 @@ const faq = [
       <div class="inner">
         <h2>Pricing</h2>
 
-        <div class="grid-3 plans">
+        <p v-if="promoActive" class="promo"><strong>Cyber week:</strong> 50% off your first year until December 11.</p>
+
+        <div class="plans plans-3">
           <div class="card plan">
-            <h3>Monthly</h3>
-            <p class="price"><span class="price-value">$149</span>/month</p>
+            <h3>Starter</h3>
+            <p class="plan-who">Up to 5 developers</p>
+            <p class="price"><span class="price-value">{{ promoActive ? '$197.50' : '$395' }}</span>/year</p>
+            <p v-if="promoActive" class="price-then">First year. Then $395/year.</p>
             <ul>
-              <li>Unlimited repos and developers</li>
+              <li>Unlimited repos and CI runs</li>
+              <li>A project skill that keeps your agents from writing slow tests</li>
               <li>Catalog updates</li>
               <li>Email support</li>
-              <li>Cancel any time</li>
             </ul>
-            <a class="btn btn-brand" href="#access" @click.prevent="goToAccess">Get access<span class="visually-hidden">, monthly</span></a>
+            <a class="btn btn-alt" :href="checkoutUrl('starter')">Buy Starter</a>
           </div>
           <div class="card plan plan-featured">
-            <h3>Yearly <span class="badge">save 44%</span></h3>
-            <p class="price"><span class="price-value">$995</span>/year</p>
+            <h3>Team <span class="badge">Most teams</span></h3>
+            <p class="plan-who">6 to 20 developers</p>
+            <p class="price"><span class="price-value">{{ promoActive ? '$497.50' : '$995' }}</span>/year</p>
+            <p v-if="promoActive" class="price-then">First year. Then $995/year.</p>
             <ul>
-              <li>The same, billed once</li>
+              <li>Everything in Starter, for a team of up to 20</li>
             </ul>
-            <a class="btn btn-brand" href="#access" @click.prevent="goToAccess">Get access<span class="visually-hidden">, yearly</span></a>
+            <a class="btn btn-brand" :href="checkoutUrl('team')">Buy Team</a>
           </div>
           <div class="card plan">
-            <h3>Enterprise</h3>
-            <p class="price"><span class="price-value">Let's talk</span></p>
+            <h3>Business</h3>
+            <p class="plan-who">Up to 100 developers</p>
+            <p class="price"><span class="price-value">{{ promoActive ? '$2,450' : '$4,900' }}</span>/year</p>
+            <p v-if="promoActive" class="price-then">First year. Then $4,900/year.</p>
             <ul>
+              <li>Everything in Team</li>
               <li>A review of your first run with the TestProf maintainers</li>
               <li>Private catalog pages for your own slow-test causes</li>
-              <li>Invoice and custom terms</li>
+              <li>Invoice and custom terms: <a class="text-link" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20TestPro.%20" target="_blank" rel="noopener">book a call</a></li>
             </ul>
-            <a class="btn btn-alt" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20TestPro.%20" target="_blank" rel="noopener">Book a call<span class="visually-hidden"> about Enterprise</span></a>
+            <a class="btn btn-alt" :href="checkoutUrl('business')">Buy Business</a>
           </div>
         </div>
 
-        <p class="plan-note">Not faster? Write to us within 14 days for a refund.</p>
+        <div class="sprint-band">
+          <p><strong>Over 20 developers, or more than 100?</strong> Start with a one-week diagnostic for $6,000, then a 2 to 3 week speedup sprint from $12,000, with TestPro for your whole team included.</p>
+          <a class="text-link" href="#sprint">How the sprint works</a>
+        </div>
+
+        <p class="plan-note">Billed yearly.<template v-if="promoActive"> Cyber week prices cover the first year; renewals are at the regular price.</template><br />Not faster? Write to us within 14 days for a refund.</p>
+      </div>
+    </section>
+
+    <!-- Speedup sprint -->
+    <section id="sprint" class="band soft">
+      <div class="inner">
+        <h2>Speedup sprint for large suites</h2>
+        <p class="section-lead">
+          A big monolith's suite grows every month, and coding agents now write tests faster than anyone can optimize them.
+          In a sprint, the TestProf team at Evil Martians cuts your build time with your engineers, then sets up your agents so the cut holds.
+        </p>
+
+        <div class="grid-3 sprint-weeks">
+          <div class="card">
+            <p class="sprint-week">Week 1</p>
+            <h3>Profile and measure</h3>
+            <p>We run TestProf on your CI and record the baseline: wall-clock per build, machine minutes, and the length of one agent test loop. Every fix is ranked by speedup per line of changed code.</p>
+            <p class="sprint-price">One week, $6,000. Start here.</p>
+          </div>
+          <div class="card">
+            <p class="sprint-week">Week 2</p>
+            <h3>Global fixes</h3>
+            <p>Rails boot, environment load, database setup and factory cascades: the fixes that speed up every test at once. They shorten each agent loop too, since an agent runs the suite 3 to 10 times per task and pays the boot cost every time.</p>
+          </div>
+          <div class="card">
+            <p class="sprint-week">Week 3</p>
+            <h3>Patterns and guardrails</h3>
+            <p>We spread the winning patterns, like let_it_be, across the suite with AI agents under our review, then add skills and CI hooks for your codebase so slow tests stay out.</p>
+          </div>
+        </div>
+
+        <div class="grid-3 sprint-facts">
+          <div>
+            <h3>Measured on your own builds</h3>
+            <p>Before and after numbers from your CI. Every spec stays green and every assertion is kept. If the diagnostic finds little time to win, we tell you and you stop there.</p>
+          </div>
+          <div>
+            <h3>Works alongside your test splitter</h3>
+            <p>Knapsack Pro and Buildkite Test Engine share the suite across machines; we make what they share smaller. Flaky tests go through the same playbook.</p>
+          </div>
+          <div>
+            <h3>The saving shows up as fewer CI machines</h3>
+            <p>A faster build lets you retire machines, or keep the fleet and absorb a year or two of test growth without buying more.</p>
+          </div>
+        </div>
+
+        <dl class="stats sprint-stats">
+          <div class="stat">
+            <dt>Power Home Remodeling</dt>
+            <dd><span class="stat-value">53 → 11 min</span><span class="stat-note">core suite of a large modular monolith, two sprints</span></dd>
+          </div>
+          <div class="stat">
+            <dt>Whop</dt>
+            <dd><span class="stat-value">2x</span><span class="stat-note">faster test suite and CI</span></dd>
+          </div>
+        </dl>
+
+        <p class="sprint-proof">
+          Read the <a class="text-link" href="https://evilmartians.com/clients/power-home-remodeling" target="_blank" rel="noopener">Power Home Remodeling</a> and <a class="text-link" href="https://evilmartians.com/chronicles/the-whop-chop-how-we-cut-a-rails-test-suite-and-ci-time-in-half" target="_blank" rel="noopener">Whop</a> stories.
+        </p>
+
+        <div class="sprint-cta">
+          <p>Two engineers, 2 to 3 weeks, from $12,000. Includes 12 months of TestPro for your whole engineering team, with no developer cap.</p>
+          <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a diagnostic call</a>
+        </div>
       </div>
     </section>
 
@@ -355,8 +441,8 @@ const faq = [
           <div class="disclosure-body"><p>{{ item.a }}</p></div>
         </details>
         <p class="final-actions">
-          <a class="btn btn-brand" href="#access" @click.prevent="goToAccess">Get free access</a>
-          <a class="text-link" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20TestPro.%20" target="_blank" rel="noopener">Book a call (Enterprise)</a>
+          <a class="btn btn-brand" href="#pricing" @click.prevent="goToPricing">See plans</a>
+          <a class="text-link" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20TestPro.%20" target="_blank" rel="noopener">Book a call about a sprint</a>
         </p>
       </div>
     </section>
@@ -551,50 +637,10 @@ const faq = [
   min-width: 0;
 }
 
-.access {
-  display: contents;
-}
-
-.access-email {
-  width: 240px;
-  min-width: 0;
-  padding: 9px 14px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
-  background-color: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
-  font-size: 0.95rem;
-}
-
-.access-email:focus {
-  border-color: var(--vp-c-brand-1);
-}
-
-.access-note {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--vp-c-text-3);
-  outline: none;
-}
-
-.access-note.under {
-  grid-column: 2;
-  text-align: center;
-}
-
-.access-note.done,
-.access-note.error {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.access-note.done {
-  color: var(--vp-c-brand-3);
-}
-
-.access-note.error {
-  color: var(--vp-c-danger-1);
+.hero-note {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
 }
 
 /* Terminal */
@@ -1258,14 +1304,6 @@ const faq = [
     grid-template-columns: 1fr;
   }
 
-  .access-email {
-    width: 100%;
-  }
-
-  .access-note.under {
-    grid-column: 1;
-  }
-
   .terminal-body {
     font-size: 0.72rem;
   }
@@ -1318,6 +1356,344 @@ const faq = [
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition: none !important;
+  }
+}
+
+/* Four plans */
+.plans-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.plan-who {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+.plan .price s {
+  margin-left: 4px;
+  color: var(--vp-c-text-3);
+}
+
+.promo {
+  margin: 0 0 24px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background-color: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-3);
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .plans-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .plans-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Speedup sprint */
+.sprint-week {
+  margin: 0 0 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3) !important;
+}
+
+.card .sprint-price {
+  margin-top: 14px;
+  font-weight: 700;
+  color: var(--vp-c-brand-3);
+}
+
+.sprint-facts {
+  margin-top: 40px;
+}
+
+.sprint-facts h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sprint-facts p {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+.sprint-proof {
+  margin: 40px auto 0;
+  max-width: 720px;
+  text-align: center;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.sprint-cta {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.sprint-cta p {
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .sprint-weeks,
+  .sprint-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* What you get */
+.get-steps .card p {
+  margin-top: 12px;
+}
+
+.get-step {
+  margin: 0 !important;
+  font-weight: 700;
+  color: var(--vp-c-brand-3) !important;
+}
+
+.get-code {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background-color: var(--vp-c-bg-alt);
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.get-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+.get-list li + li {
+  margin-top: 6px;
+}
+
+@media (max-width: 960px) {
+  .get-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.plan-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  text-align: center;
+}
+
+.plan-actions .btn {
+  margin-top: 0;
+}
+
+.plan-actions .text-link {
+  font-size: 0.9rem;
+}
+
+/* Review fixes, 27 Nov */
+.title {
+  font-size: 2.25rem;
+}
+
+.hero h1 {
+  font-size: 2.4rem;
+}
+
+.btn-brand {
+  background-color: #5f3f73;
+  color: #fff;
+}
+
+.btn-brand:hover {
+  background-color: #4e3360;
+}
+
+.dark .btn-brand {
+  background-color: #c4a8d4;
+  color: #1b1520;
+}
+
+.dark .btn-brand:hover {
+  background-color: #d6c0e2;
+}
+
+.hero-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+.assurances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-1);
+}
+
+.assurances li {
+  position: relative;
+  padding-left: 22px;
+}
+
+.assurances li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: #2fb67c;
+}
+
+.hero-proof {
+  margin: 20px 0 0;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+
+.terminal {
+  border-color: #3a3242;
+}
+
+.terminal-timer {
+  margin-left: auto;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(235, 235, 245, 0.7);
+}
+
+.terminal-timer.done {
+  color: #3dd68c;
+  font-weight: 700;
+}
+
+.line-done .result {
+  display: block;
+  margin-top: 8px;
+  padding-left: 2ch;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.line-done .result s {
+  margin-right: 12px;
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: rgba(235, 235, 245, 0.45);
+}
+
+.get-code code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.get-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.plans-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.price-then {
+  margin: 2px 0 0 !important;
+  font-size: 0.85rem !important;
+  color: var(--vp-c-text-3) !important;
+}
+
+.sprint-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 20px;
+  padding: 18px 24px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background-color: var(--vp-c-bg-soft);
+}
+
+.sprint-band p {
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.5;
+  color: var(--vp-c-text-2);
+}
+
+.sprint-band strong {
+  color: var(--vp-c-text-1);
+}
+
+.sprint-stats {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 640px;
+  margin: 40px auto 0;
+}
+
+.faq.disclosure {
+  margin-top: 0;
+  border: 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+  border-radius: 0;
+  background: none;
+}
+
+.faq.disclosure:first-of-type {
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.faq.disclosure summary {
+  padding: 16px 4px;
+}
+
+.faq.disclosure .disclosure-body {
+  padding: 0 4px 18px 21px;
+}
+
+@media (max-width: 960px) {
+  .plans-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .plans-3 .plan-featured {
+    order: -1;
+  }
+
+  .hero h1 {
+    font-size: 1.9rem;
   }
 }
 </style>

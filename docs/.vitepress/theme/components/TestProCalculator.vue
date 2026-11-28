@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+const props = defineProps<{ checkoutUrl?: (plan: 'starter' | 'team' | 'business') => string }>()
+
 const WORKING_DAYS_PER_YEAR = 21 * 12
 const WEEKS_PER_YEAR = 52
 const SPEEDUP = 1.5
 const WAITING_SHARE = 1 / 3
-const RUNS_PER_PERSON = 10
+const PRS_PER_DAY = 2
+const RUNS_PER_PR = 2
 const RUNNER_PRICE = 0.012
 const RUNNERS = 4
-const TESTPRO_PER_YEAR = 995
-const WORK_HOURS_PER_YEAR = WORKING_DAYS_PER_YEAR * 8
+const STARTER_MAX_DEVELOPERS = 5
+const STARTER_PER_YEAR = 395
+const TEAM_MAX_DEVELOPERS = 20
+const TEAM_PER_YEAR = 995
+const BUSINESS_PER_YEAR = 4900
 
 const developers = ref(20)
 const minutesPerRun = ref(20)
-const salary = ref(0)
 
 const dollars = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 const count = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
@@ -37,25 +42,19 @@ const chipGroups = [
     options: [10, 20, 40].map((v) => ({ value: v, label: `${v} min` })),
     model: minutesPerRun,
   },
-  {
-    name: 'calc-salary',
-    legend: 'Developer salary',
-    options: [
-      { value: 0, label: 'Skip' },
-      { value: 100000, label: '$100k' },
-    ],
-    model: salary,
-  },
 ]
 
 const savedShare = 1 - 1 / SPEEDUP
-const runsPerYear = computed(() => developers.value * RUNS_PER_PERSON * WORKING_DAYS_PER_YEAR)
+const runsPerYear = computed(() => developers.value * PRS_PER_DAY * RUNS_PER_PR * WORKING_DAYS_PER_YEAR)
 const ciSaved = computed(() => runsPerYear.value * minutesPerRun.value * RUNNERS * RUNNER_PRICE * savedShare)
 const waitingHours = computed(() => (runsPerYear.value * minutesPerRun.value * savedShare * WAITING_SHARE) / 60)
-const waitingWorth = computed(() => (waitingHours.value * salary.value) / WORK_HOURS_PER_YEAR)
-const saved = computed(() => ciSaved.value + waitingWorth.value)
+const plan = computed(() => {
+  if (developers.value <= STARTER_MAX_DEVELOPERS) return { key: 'starter' as const, name: 'Starter', price: STARTER_PER_YEAR }
+  if (developers.value <= TEAM_MAX_DEVELOPERS) return { key: 'team' as const, name: 'Team', price: TEAM_PER_YEAR }
+  return { key: 'business' as const, name: 'Business', price: BUSINESS_PER_YEAR }
+})
 const paybackWeeks = computed(() =>
-  saved.value >= TESTPRO_PER_YEAR ? Math.ceil((WEEKS_PER_YEAR * TESTPRO_PER_YEAR) / saved.value) : null,
+  ciSaved.value >= plan.value.price ? Math.ceil((WEEKS_PER_YEAR * plan.value.price) / ciSaved.value) : null,
 )
 </script>
 
@@ -95,15 +94,16 @@ const paybackWeeks = computed(() =>
         <div>
           <dt>Developer time saved</dt>
           <dd>{{ plural(waitingHours, 'hour') }} a year</dd>
-          <dd v-if="salary" class="calc-worth">worth {{ dollars.format(waitingWorth) }}</dd>
         </div>
       </dl>
 
       <p class="calc-assumptions">
-        Assumes {{ plural(developers, 'developer') }} pushing {{ RUNS_PER_PERSON }} times a day, a {{ SPEEDUP }}x faster CI run
-        on {{ RUNNERS }} GitHub runners at ${{ RUNNER_PRICE }} a minute, developers waiting for a third of each run<template v-if="salary"> at {{ dollars.format(salary) }} a year for 8-hour days</template>,
-        and TestPro at {{ dollars.format(TESTPRO_PER_YEAR) }} a year.
+        Assumes {{ plural(developers, 'developer') }} shipping {{ PRS_PER_DAY }} PRs a day with {{ RUNS_PER_PR }} CI runs each, a {{ SPEEDUP }}x faster CI run
+        on {{ RUNNERS }} GitHub runners at ${{ RUNNER_PRICE }} a minute, developers waiting for a third of each run,
+        and TestPro {{ plan.name }} at {{ dollars.format(plan.price) }} a year.
       </p>
+
+      <a v-if="props.checkoutUrl" class="calc-buy" :href="props.checkoutUrl(plan.key)">Buy {{ plan.name }}</a>
     </div>
   </div>
 </template>
@@ -214,13 +214,6 @@ const paybackWeeks = computed(() =>
   color: var(--vp-c-text-1);
 }
 
-.calc-numbers .calc-worth {
-  margin-top: 0;
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--vp-c-text-2);
-}
-
 .calc-assumptions {
   margin: 24px 0 0;
   font-size: 0.8rem;
@@ -255,5 +248,27 @@ const paybackWeeks = computed(() =>
   .calc * {
     transition: none !important;
   }
+}
+
+.calc-buy {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 11.5px 24px 8.5px;
+  border-radius: 8px;
+  background-color: #5f3f73;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.calc-buy:hover {
+  background-color: #4e3360;
+}
+
+.dark .calc-buy {
+  background-color: #c4a8d4;
+  color: #1b1520;
 }
 </style>
