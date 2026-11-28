@@ -209,7 +209,7 @@ export default defineConfig({
         nav: [
           { text: 'Guide', link: '/guide/getting_started', activeMatch: '/guide/' },
           { text: 'LLMs', link: '/llms-full.txt' },
-          { text: `TestPro<span class="nav-stamp">${hopping('Early access')}</span>`, link: '/pro' },
+          { text: `TestPro<span class="nav-stamp">${hopping('New')}</span>`, link: '/pro' },
         ],
         sidebar: {
           '/guide/': guideSidebar,

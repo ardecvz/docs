@@ -121,7 +121,7 @@ const goToPricing = () => {
 
 const faq = [
   { q: 'What does it work with?', a: 'Rails apps with RSpec or Minitest. Agents: Claude Code, Codex, Cursor and OpenCode, or any other MCP client. The agent installs anything else it needs.' },
-  { q: 'What exactly do I install?', a: 'A private gem from GitHub Packages, installed with a token: on each developer\'s machine, or in your Gemfile for the whole team. Running test-pro install adds the TestPro MCP server and its skill to your agent\'s config.' },
+  { q: 'What exactly do I install?', a: 'A private gem from GitHub Packages. After you buy, we email your access token and install steps within one business day. Install it on each developer\'s machine, or in your Gemfile for the whole team. Running test-pro install adds the TestPro MCP server and its skill to your agent\'s config.' },
   { q: 'Does it change my app?', a: 'Fixes stay on the test side: test config, spec support, factories and specs. App code changes only when a fix leaves the app\'s behavior the same, for example a setting that applies in tests only. The summary lists every app change.' },
   { q: 'Will it break my tests?', a: 'No test is skipped or removed and no assertion is weakened. Each fix is kept only after the suite passes with it. Tests that already failed before the run are recorded as known failures, and flaky ones are listed in the summary.' },
   { q: 'How long does a run take?', a: 'As long as you allow. Without a budget, the agent gets about 15 times your suite\'s run time, 30 minutes at least, and starts wrapping up at 80% of it. In our benchmark a run took 34 minutes on average.' },
@@ -161,7 +161,7 @@ const faq = [
           <ul class="assurances">
             <li>Every test stays green, every assertion kept</li>
             <li>Your code stays on your machine</li>
-            <li>Not faster? Full refund within 14 days</li>
+            <li>Not faster? Full refund on any plan within 14 days</li>
           </ul>
 
           <p class="hero-proof">From the team behind TestProf, the open-source Rails test profiler used by GitLab and Discourse.</p>
@@ -359,11 +359,11 @@ test-pro install</code></pre>
         </div>
 
         <div class="sprint-band">
-          <p><strong>Over 20 developers, or more than 100?</strong> A two-week speedup sprint for $12,000, with TestPro for your whole team included. Large suites can add weeks at $6,000 each.</p>
+          <p><strong>Over 20 developers, or more than 100?</strong> A two-week speedup sprint for $12,000, with a year of TestPro for your whole team included. Large suites can add weeks at $6,000 each.</p>
           <a class="text-link" href="#sprint">How the sprint works</a>
         </div>
 
-        <p class="plan-note">Billed yearly.<template v-if="promoActive"> Cyber week prices cover the first year; renewals are at the regular price.</template><br />Not faster? Write to us within 14 days for a refund.</p>
+        <p class="plan-note">Billed yearly.<template v-if="promoActive"> Cyber week prices cover the first year; renewals are at the regular price.</template><br />Not faster? Write to us within 14 days for a full refund on any plan.</p>
       </div>
     </section>
 
@@ -427,7 +427,7 @@ test-pro install</code></pre>
         </p>
 
         <div class="sprint-cta">
-          <p>Two weeks, $12,000. Extra weeks at $6,000 each, depending on the size and complexity of your suite. Includes 12 months of TestPro for your whole engineering team, with no developer cap.</p>
+          <p>Two weeks, $12,000. Extra weeks at $6,000 each, depending on the size and complexity of your suite. Includes 12 months of TestPro for your whole engineering team, with no developer cap. After that, TestPro renews at $4,900 a year for up to 100 developers or $9,900 with no cap.</p>
           <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a call about a sprint</a>
         </div>
       </div>
