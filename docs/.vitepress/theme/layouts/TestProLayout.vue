@@ -131,7 +131,7 @@ const faq = [
   { q: 'What happens if I don\'t renew?', a: 'Everything the runs produced stays in your repo: the fixes, the summaries and the project skill. New versions of the gem need an active subscription.' },
   { q: 'How is it different from TestProf?', a: 'TestProf is the open-source toolbox and always stays free. TestPro is the gem your agent works through: the catalog of known causes, the playbooks, and tools that make the agent measure every fix before keeping it. Both come from the TestProf team.' },
   { q: 'Who counts as a developer?', a: 'Your engineering headcount, as you count it. We don\'t check; we trust you.' },
-  { q: 'We have more than 100 developers. Which plan fits?', a: 'The speedup sprint. It includes 12 months of TestPro for your whole engineering team, with no developer cap, and our engineers work on your suite with you for 2 to 3 weeks. After the first year, the licence renews at $9,900 a year.' },
+  { q: 'We have more than 100 developers. Which plan fits?', a: 'The speedup sprint. It includes 12 months of TestPro for your whole engineering team, with no developer cap, and our engineers work on your suite with you for two weeks, longer for very large suites. After the first year, the licence renews at $9,900 a year.' },
   { q: 'Can I run it in CI?', a: 'Yes. The gem installs with a token, like other private gems. Install it in the CI job and run your agent headless there, so new slow tests do not creep in.' },
 ]
 </script>
@@ -359,7 +359,7 @@ test-pro install</code></pre>
         </div>
 
         <div class="sprint-band">
-          <p><strong>Over 20 developers, or more than 100?</strong> Start with a one-week diagnostic for $6,000, then a 2 to 3 week speedup sprint from $12,000, with TestPro for your whole team included.</p>
+          <p><strong>Over 20 developers, or more than 100?</strong> A two-week speedup sprint for $12,000, with TestPro for your whole team included. Large suites can add weeks at $6,000 each.</p>
           <a class="text-link" href="#sprint">How the sprint works</a>
         </div>
 
@@ -381,24 +381,25 @@ test-pro install</code></pre>
             <p class="sprint-week">Week 1</p>
             <h3>Profile and measure</h3>
             <p>We run TestProf on your CI and record the baseline: wall-clock per build, machine minutes, and the length of one agent test loop. Every fix is ranked by speedup per line of changed code.</p>
-            <p class="sprint-price">One week, $6,000. Start here.</p>
+            <p class="sprint-price">Can be booked alone: $6,000.</p>
           </div>
           <div class="card">
             <p class="sprint-week">Week 2</p>
-            <h3>Global fixes</h3>
-            <p>Rails boot, environment load, database setup and factory cascades: the fixes that speed up every test at once. They shorten each agent loop too, since an agent runs the suite 3 to 10 times per task and pays the boot cost every time.</p>
+            <h3>Fixes and guardrails</h3>
+            <p>Rails boot, environment load, database setup and factory cascades: the fixes that speed up every test at once, and every agent loop with them. Then skills and CI hooks for your codebase, so slow tests stay out.</p>
           </div>
           <div class="card">
-            <p class="sprint-week">Week 3</p>
-            <h3>Patterns and guardrails</h3>
-            <p>We spread the winning patterns, like let_it_be, across the suite with AI agents under our review, then add skills and CI hooks for your codebase so slow tests stay out.</p>
+            <p class="sprint-week">Extra weeks</p>
+            <h3>Patterns across a large suite</h3>
+            <p>For large or complex suites, we spread the winning patterns, like let_it_be, file by file with AI agents under our review.</p>
+            <p class="sprint-price">$6,000 a week, as many as your suite needs.</p>
           </div>
         </div>
 
         <div class="grid-3 sprint-facts">
           <div>
             <h3>Measured on your own builds</h3>
-            <p>Before and after numbers from your CI. Every spec stays green and every assertion is kept. If the diagnostic finds little time to win, we tell you and you stop there.</p>
+            <p>Before and after numbers from your CI. Every spec stays green and every assertion is kept. If week 1 finds little time to win, we tell you and you stop there.</p>
           </div>
           <div>
             <h3>Works alongside your test splitter</h3>
@@ -426,8 +427,8 @@ test-pro install</code></pre>
         </p>
 
         <div class="sprint-cta">
-          <p>Two engineers, 2 to 3 weeks, from $12,000. Includes 12 months of TestPro for your whole engineering team, with no developer cap.</p>
-          <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a diagnostic call</a>
+          <p>Two weeks, $12,000. Extra weeks at $6,000 each, depending on the size and complexity of your suite. Includes 12 months of TestPro for your whole engineering team, with no developer cap.</p>
+          <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a call about a sprint</a>
         </div>
       </div>
     </section>
