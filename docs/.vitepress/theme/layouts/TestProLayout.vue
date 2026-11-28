@@ -159,7 +159,7 @@ const faq = [
 
           <ul class="assurances">
             <li>Every test stays green, every assertion kept</li>
-            <li>Your code stays on your machine</li>
+            <li>The gem sends nothing anywhere</li>
             <li>Not faster? Full refund on any plan within 14 days</li>
           </ul>
 
@@ -184,6 +184,19 @@ const faq = [
               :class="[`line-${line.kind}`, { shown: clipStep > i }]"
             ><template v-if="line.kind === 'done'"><span class="check">✓ </span>Tests 4.6x faster, all green<span class="result"><s>3:32</s> 0:46</span></template><template v-else>{{ line.text }}</template></p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why we built it -->
+    <section class="band story">
+      <div class="inner">
+        <h2>Why we built TestPro</h2>
+        <div class="story-body">
+          <p>We started TestProf in 2017, after meeting the same slow test suite in project after project at Evil Martians. We collected the fixes into an open-source toolbox, and the first client suite we used it on got five times faster.</p>
+          <p>Since then we've used it on suites like Power Home Remodeling's, which went from 53 to 11 minutes in two weeks, and Whop's, which we cut in half twice as it grew from 11,000 to 30,000 examples.</p>
+          <p>This year we saw something new: once a team hands code writing to agents, the suite grows faster than anyone can optimize it, and every agent pays for a slow suite on every task. So we wrote down what we know, 40 causes of slow Rails tests and how to fix each one, in a form your agent can use. TestProf stays free and open source.</p>
+          <p class="story-sign">Vladimir Dementyev and the TestProf team at Evil Martians</p>
         </div>
       </div>
     </section>
@@ -316,7 +329,9 @@ test-pro install</code></pre>
       <div class="inner">
         <h2>Pricing</h2>
 
-        <p v-if="promoActive" class="promo"><strong>Cyber week:</strong> 50% off your first year until December 11.</p>
+        <p v-if="promoActive" class="promo"><strong>Launch price:</strong> half off your first year if you buy by December 11. We want early users and their feedback.</p>
+
+        <p class="plans-lead">Same gem on every plan. Pay by team size; we don't check.</p>
 
         <div class="plans plans-3">
           <div class="card plan">
@@ -333,7 +348,7 @@ test-pro install</code></pre>
             </ul>
           </div>
           <div class="card plan plan-featured">
-            <h3>Team <span class="badge">Most teams</span></h3>
+            <h3>Team</h3>
             <p class="plan-who">6 to 20 developers</p>
             <p class="price"><s v-if="promoActive" class="price-was">$995</s><span class="price-value">{{ promoActive ? '$498' : '$995' }}</span>/year</p>
             <p v-if="promoActive" class="price-then">First year. Then $995/year.</p>
@@ -362,7 +377,7 @@ test-pro install</code></pre>
           <a class="text-link" href="#sprint">How the sprint works</a>
         </div>
 
-        <p class="plan-note">Billed yearly.<template v-if="promoActive"> Cyber week prices cover the first year; renewals are at the regular price.</template><br />Not faster? Write to us within 14 days for a full refund on any plan.</p>
+        <p class="plan-note">Billed yearly.<template v-if="promoActive"> Launch prices cover the first year; renewals are at the regular price.</template><br />Not faster? Write to us within 14 days for a full refund on any plan.</p>
       </div>
     </section>
 
@@ -406,6 +421,7 @@ test-pro install</code></pre>
         </dl>
 
         <div class="sprint-cta">
+          <p class="sprint-renewal">After the included year, TestPro renews at $4,900 a year for up to 100 developers, or $9,900 with no cap.</p>
           <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a call about a sprint</a>
         </div>
       </div>
@@ -440,8 +456,16 @@ test-pro install</code></pre>
       <p class="footer-badge">
         <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">
           <img
-            src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg"
-            alt="Sponsored by Evil Martians"
+            class="badge-light"
+            src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0.svg"
+            alt="Built by Evil Martians"
+            width="236"
+            height="54"
+          />
+          <img
+            class="badge-dark"
+            src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0_for-dark-bg.svg"
+            alt="Built by Evil Martians"
             width="236"
             height="54"
           />
@@ -1509,15 +1533,6 @@ test-pro install</code></pre>
   background-color: #4e3360;
 }
 
-.dark .btn-brand {
-  background-color: #c4a8d4;
-  color: #1b1520;
-}
-
-.dark .btn-brand:hover {
-  background-color: #d6c0e2;
-}
-
 .hero-note {
   margin: 0;
   font-size: 0.9rem;
@@ -1842,5 +1857,103 @@ test-pro install</code></pre>
 
 .final-actions {
   justify-content: flex-start;
+}
+
+.badge-dark,
+.dark .badge-light {
+  display: none;
+}
+
+.dark .badge-dark {
+  display: inline;
+}
+
+/* Spacing compromise and reading size, 27 Nov */
+.band {
+  padding: 96px 24px;
+}
+
+.section-lead {
+  font-size: 1.0625rem;
+}
+
+.card p,
+.get-list,
+.plan ul,
+.disclosure-body {
+  font-size: 1rem;
+}
+
+.plans-lead {
+  margin: 0 0 20px;
+  color: var(--vp-c-text-1);
+}
+
+.sprint-renewal {
+  margin: 0 0 16px;
+  color: var(--vp-c-text-2);
+}
+
+/* Dark mode review */
+.dark .terminal {
+  background-color: #0f0d12;
+  border-color: #3a3242;
+  box-shadow: 0 0 0 1px rgba(196, 168, 212, 0.08), 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.dark .terminal-bar {
+  border-color: #3a3242;
+}
+
+.dark .stamp {
+  background-color: #c23b52;
+  box-shadow: none;
+}
+
+.dark .card p {
+  color: rgba(235, 235, 245, 0.78);
+}
+
+.dark .price-was,
+.dark .price-then,
+.dark .stat-note,
+.dark .sprint-week {
+  color: rgba(235, 235, 245, 0.62) !important;
+}
+
+.dark .dot-alone {
+  border-color: rgba(235, 235, 245, 0.75);
+}
+
+.dark .link {
+  background-color: rgba(196, 168, 212, 0.55);
+}
+
+@media (max-width: 960px) {
+  .band {
+    padding: 64px 20px;
+  }
+}
+
+/* Why we built it */
+.story-body {
+  max-width: 640px;
+}
+
+.story-body p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--vp-c-text-1);
+}
+
+.story-body p + p {
+  margin-top: 16px;
+}
+
+.story-body .story-sign {
+  margin-top: 24px;
+  font-size: 0.95rem;
+  color: var(--vp-c-text-2);
 }
 </style>

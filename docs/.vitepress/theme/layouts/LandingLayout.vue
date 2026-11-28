@@ -62,7 +62,7 @@ onMounted(() => {
             <a class="btn btn-alt" href="/pro">See TestPro</a>
             <a class="btn btn-alt" href="/pro#pricing">Pricing</a>
           </div>
-          <p v-if="promoActive" class="pro-promo"><strong>Cyber week:</strong> 50% off your first year until December 11.</p>
+          <p v-if="promoActive" class="pro-promo"><strong>Launch price:</strong> half off your first year if you buy by December 11.</p>
         </div>
         <dl class="pro-stats">
           <div>
@@ -193,8 +193,16 @@ onMounted(() => {
         <p class="footer-badge">
           <a href="https://evilmartians.com/?utm_source=test-prof" target="_blank" rel="noopener">
             <img
-              src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg"
-              alt="Sponsored by Evil Martians"
+              class="badge-light"
+              src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0.svg"
+              alt="Built by Evil Martians"
+              width="236"
+              height="54"
+            />
+            <img
+              class="badge-dark"
+              src="https://evilmartians.com/badges/sponsored-by-evil-martians_v2.0_for-dark-bg.svg"
+              alt="Built by Evil Martians"
               width="236"
               height="54"
             />
@@ -642,5 +650,23 @@ onMounted(() => {
     border-left: 0;
     border-top: 1px solid var(--vp-c-divider);
   }
+}
+
+.badge-dark,
+.dark .badge-light {
+  display: none;
+}
+
+.dark .badge-dark {
+  display: inline;
+}
+
+.dark .btn-brand {
+  background-color: #8a5aa8;
+  color: #fff;
+}
+
+.dark .btn-brand:hover {
+  background-color: #9b6bb9;
 }
 </style>

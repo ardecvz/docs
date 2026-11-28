@@ -184,8 +184,8 @@
   background-color: var(--vp-c-default-soft);
   color: var(--vp-c-text-1);
   font-family: var(--vp-font-family-mono);
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -234,5 +234,13 @@
 .pro-page .VPNavScreenTranslations,
 .pro-page .VPNavBarExtra .translations {
   display: none;
+}
+
+.dark .pro-page {
+  --vp-c-text-2: rgba(235, 235, 245, 0.72);
+}
+
+.dark .nav-stamp {
+  color: rgba(255, 255, 255, 0.85);
 }
 
