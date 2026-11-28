@@ -19,8 +19,10 @@ const benchResults = [
 ]
 
 const AXIS_MAX = 5
-const ticks = [0, 1, 2, 3, 4, 5]
-const position = (value: number) => `${(value / AXIS_MAX) * 100}%`
+const AXIS_MIN = 1
+const ticks = [1, 2, 3, 4, 5]
+const position = (value: number) => `${((value - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * 100}%`
+const span = (value: number) => `${(value / (AXIS_MAX - AXIS_MIN)) * 100}%`
 const times = (value: number, digits = 2) => `${value.toFixed(digits)}x`
 
 const medianOf = (values: number[]) => {
@@ -120,18 +122,15 @@ const goToPricing = () => {
 }
 
 const faq = [
-  { q: 'What does it work with?', a: 'Rails apps with RSpec or Minitest. Agents: Claude Code, Codex, Cursor and OpenCode, or any other MCP client. The agent installs anything else it needs.' },
-  { q: 'What exactly do I install?', a: 'A private gem from GitHub Packages. After you buy, we email your access token and install steps within one business day. Install it on each developer\'s machine, or in your Gemfile for the whole team. Running test-pro install adds the TestPro MCP server and its skill to your agent\'s config.' },
-  { q: 'Does it change my app?', a: 'Fixes stay on the test side: test config, spec support, factories and specs. App code changes only when a fix leaves the app\'s behavior the same, for example a setting that applies in tests only. The summary lists every app change.' },
-  { q: 'Will it break my tests?', a: 'No test is skipped or removed and no assertion is weakened. Each fix is kept only after the suite passes with it. Tests that already failed before the run are recorded as known failures, and flaky ones are listed in the summary.' },
+  { q: 'What do I install, and what does it work with?', a: 'Rails apps with RSpec or Minitest, and Claude Code, Codex, Cursor, OpenCode or any other MCP client. TestPro is a private gem from GitHub Packages: after you buy, we email your access token and install steps within one business day. Install it on each developer\'s machine, or in your Gemfile for the whole team. Running test-pro install sets up your agent, and the agent installs anything else it needs.' },
+  { q: 'Will it break my tests or change my app?', a: 'No test is skipped or removed and no assertion is weakened. Each fix is kept only after the suite passes with it. Fixes stay on the test side: test config, spec support, factories and specs. App code changes only when the app\'s behavior stays the same, for example a setting that applies in tests only, and the summary lists every app change. Tests that already failed before the run are recorded as known failures, and flaky ones are listed in the summary.' },
   { q: 'How long does a run take?', a: 'As long as you allow. Without a budget, the agent gets about 15 times your suite\'s run time, 30 minutes at least, and starts wrapping up at 80% of it. In our benchmark a run took 34 minutes on average.' },
   { q: 'Does my code leave my machine?', a: 'The gem sends nothing anywhere. The whole catalog ships inside the gem, so your agent reads it locally. Your agent\'s model provider sees what it always sees.' },
   { q: 'What if my suite is already fast?', a: 'Run it once: it follows TestProf\'s own profiling flow and shows whether there is time left to win. If it finds nothing worth keeping, ask for the refund.' },
-  { q: 'Why pay every year after the first run?', a: 'Your app keeps moving: new gems, Rails upgrades, new kinds of tests. Each new version of the gem brings new causes and fixes to the catalog, so a rerun after an upgrade or a burst of new specs finds what changed.' },
-  { q: 'What happens if I don\'t renew?', a: 'Everything the runs produced stays in your repo: the fixes, the summaries and the project skill. New versions of the gem need an active subscription.' },
+  { q: 'Why pay every year, and what if I don\'t renew?', a: 'Your app keeps moving: new gems, Rails upgrades, new kinds of tests. Each new version of the gem brings new causes and fixes to the catalog, so a rerun after an upgrade or a burst of new specs finds what changed. If you don\'t renew, everything the runs produced stays in your repo: the fixes, the summaries and the project skill. New versions need an active subscription.' },
   { q: 'How is it different from TestProf?', a: 'TestProf is the open-source toolbox and always stays free. TestPro is the gem your agent works through: the catalog of known causes, the playbooks, and tools that make the agent measure every fix before keeping it. Both come from the TestProf team.' },
-  { q: 'Who counts as a developer?', a: 'Your engineering headcount, as you count it. We don\'t check; we trust you.' },
-  { q: 'We have more than 100 developers. Which plan fits?', a: 'The speedup sprint. It includes 12 months of TestPro for your whole engineering team, with no developer cap, and our engineers work on your suite with you for two weeks, longer for very large suites. After the first year, the licence renews at $9,900 a year.' },
+  { q: 'Which plan fits my team?', a: 'Count your engineering headcount, as you count it; we don\'t check. Up to 5 developers: Starter. 6 to 20: Team. Up to 100: Business. More than 100, or a suite too big for one agent run: the speedup sprint, which includes 12 months of TestPro for your whole team with no developer cap. After that year, TestPro renews at $4,900 a year for up to 100 developers or $9,900 with no cap.' },
+  { q: 'How does a sprint work with our CI?', a: 'We measure before and after on your own builds: wall-clock per build and machine minutes. Every spec stays green and every assertion is kept, and if week 1 finds little time to win, we tell you and you stop there. Knapsack Pro and Buildkite Test Engine share the suite across machines; we make what they share smaller. Flaky tests go through the same playbook. A faster build lets you retire CI machines, or keep the fleet and absorb a year or two of test growth without buying more.' },
   { q: 'Can I run it in CI?', a: 'Yes. The gem installs with a token, like other private gems. Install it in the CI job and run your agent headless there, so new slow tests do not creep in.' },
 ]
 </script>
@@ -171,7 +170,7 @@ const faq = [
           <div class="terminal-bar">
             <span class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></span>
             <span class="terminal-title" aria-hidden="true">claude</span>
-            <span class="terminal-timer" :class="{ done: clipStep >= clip.length }" aria-hidden="true">{{ timerText }}</span>
+            <span v-if="clipStep < clip.length" class="terminal-timer" aria-hidden="true">{{ timerText }}</span>
           </div>
           <div
             class="terminal-body"
@@ -256,7 +255,7 @@ test-pro install</code></pre>
                       class="link"
                       :style="{
                         left: position(Math.min(result.alone, result.pro)),
-                        width: position(Math.abs(result.pro - result.alone)),
+                        width: span(Math.abs(result.pro - result.alone)),
                       }"
                     ></span>
                     <span class="dot dot-alone" :style="{ left: position(result.alone) }"></span>
@@ -280,7 +279,7 @@ test-pro install</code></pre>
             <dt>Apps where TestPro wins</dt>
             <dd>
               <span class="stat-value">{{ ahead.length }} of {{ benchResults.length }}</span>
-              <span class="stat-note">up to {{ gain(best) }} faster</span>
+              <span class="stat-note">up to {{ times(best.pro, 1) }} faster</span>
             </dd>
           </div>
           <div class="stat">
@@ -323,43 +322,43 @@ test-pro install</code></pre>
           <div class="card plan">
             <h3>Starter</h3>
             <p class="plan-who">Up to 5 developers</p>
-            <p class="price"><span class="price-value">{{ promoActive ? '$197.50' : '$395' }}</span>/year</p>
+            <p class="price"><s v-if="promoActive" class="price-was">$395</s><span class="price-value">{{ promoActive ? '$198' : '$395' }}</span>/year</p>
             <p v-if="promoActive" class="price-then">First year. Then $395/year.</p>
+            <a class="btn btn-alt" :href="checkoutUrl('starter')">Buy Starter</a>
             <ul>
               <li>Unlimited repos and CI runs</li>
               <li>A project skill that keeps your agents from writing slow tests</li>
               <li>Catalog updates</li>
               <li>Email support</li>
             </ul>
-            <a class="btn btn-alt" :href="checkoutUrl('starter')">Buy Starter</a>
           </div>
           <div class="card plan plan-featured">
             <h3>Team <span class="badge">Most teams</span></h3>
             <p class="plan-who">6 to 20 developers</p>
-            <p class="price"><span class="price-value">{{ promoActive ? '$497.50' : '$995' }}</span>/year</p>
+            <p class="price"><s v-if="promoActive" class="price-was">$995</s><span class="price-value">{{ promoActive ? '$498' : '$995' }}</span>/year</p>
             <p v-if="promoActive" class="price-then">First year. Then $995/year.</p>
+            <a class="btn btn-brand" :href="checkoutUrl('team')">Buy Team</a>
             <ul>
               <li>Everything in Starter, for a team of up to 20</li>
             </ul>
-            <a class="btn btn-brand" :href="checkoutUrl('team')">Buy Team</a>
           </div>
           <div class="card plan">
             <h3>Business</h3>
             <p class="plan-who">Up to 100 developers</p>
-            <p class="price"><span class="price-value">{{ promoActive ? '$2,450' : '$4,900' }}</span>/year</p>
+            <p class="price"><s v-if="promoActive" class="price-was">$4,900</s><span class="price-value">{{ promoActive ? '$2,450' : '$4,900' }}</span>/year</p>
             <p v-if="promoActive" class="price-then">First year. Then $4,900/year.</p>
+            <a class="btn btn-alt" :href="checkoutUrl('business')">Buy Business</a>
             <ul>
               <li>Everything in Team</li>
               <li>A review of your first run with the TestProf maintainers</li>
               <li>Private catalog pages for your own slow-test causes</li>
               <li>Invoice and custom terms: <a class="text-link" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20TestPro.%20" target="_blank" rel="noopener">book a call</a></li>
             </ul>
-            <a class="btn btn-alt" :href="checkoutUrl('business')">Buy Business</a>
           </div>
         </div>
 
         <div class="sprint-band">
-          <p><strong>Over 20 developers, or more than 100?</strong> A two-week speedup sprint for $12,000, with a year of TestPro for your whole team included. Large suites can add weeks at $6,000 each.</p>
+          <p><strong>Big suite, or more than 100 developers?</strong> The two-week speedup sprint covers your whole team: $12,000, with a year of TestPro included.</p>
           <a class="text-link" href="#sprint">How the sprint works</a>
         </div>
 
@@ -372,8 +371,7 @@ test-pro install</code></pre>
       <div class="inner">
         <h2>Speedup sprint for large suites</h2>
         <p class="section-lead">
-          A big monolith's suite grows every month, and coding agents now write tests faster than anyone can optimize them.
-          In a sprint, the TestProf team at Evil Martians cuts your build time with your engineers, then sets up your agents so the cut holds.
+          Two weeks with the TestProf team, for suites too big for one agent run. $12,000, extra weeks $6,000 each, with a year of TestPro for your whole team included.
         </p>
 
         <div class="grid-3 sprint-weeks">
@@ -396,38 +394,18 @@ test-pro install</code></pre>
           </div>
         </div>
 
-        <div class="grid-3 sprint-facts">
-          <div>
-            <h3>Measured on your own builds</h3>
-            <p>Before and after numbers from your CI. Every spec stays green and every assertion is kept. If week 1 finds little time to win, we tell you and you stop there.</p>
-          </div>
-          <div>
-            <h3>Works alongside your test splitter</h3>
-            <p>Knapsack Pro and Buildkite Test Engine share the suite across machines; we make what they share smaller. Flaky tests go through the same playbook.</p>
-          </div>
-          <div>
-            <h3>The saving shows up as fewer CI machines</h3>
-            <p>A faster build lets you retire machines, or keep the fleet and absorb a year or two of test growth without buying more.</p>
-          </div>
-        </div>
-
         <dl class="stats sprint-stats">
           <div class="stat">
-            <dt>Power Home Remodeling</dt>
+            <dt><a class="text-link" href="https://evilmartians.com/clients/power-home-remodeling" target="_blank" rel="noopener">Power Home Remodeling</a></dt>
             <dd><span class="stat-value">53 → 11 min</span><span class="stat-note">core suite of a large modular monolith, two sprints</span></dd>
           </div>
           <div class="stat">
-            <dt>Whop</dt>
+            <dt><a class="text-link" href="https://evilmartians.com/chronicles/the-whop-chop-how-we-cut-a-rails-test-suite-and-ci-time-in-half" target="_blank" rel="noopener">Whop</a></dt>
             <dd><span class="stat-value">2x</span><span class="stat-note">faster test suite and CI</span></dd>
           </div>
         </dl>
 
-        <p class="sprint-proof">
-          Read the <a class="text-link" href="https://evilmartians.com/clients/power-home-remodeling" target="_blank" rel="noopener">Power Home Remodeling</a> and <a class="text-link" href="https://evilmartians.com/chronicles/the-whop-chop-how-we-cut-a-rails-test-suite-and-ci-time-in-half" target="_blank" rel="noopener">Whop</a> stories.
-        </p>
-
         <div class="sprint-cta">
-          <p>Two weeks, $12,000. Extra weeks at $6,000 each, depending on the size and complexity of your suite. Includes 12 months of TestPro for your whole engineering team, with no developer cap. After that, TestPro renews at $4,900 a year for up to 100 developers or $9,900 with no cap.</p>
           <a class="btn btn-brand" href="https://cal.com/team/evilmartians/exploration?notes=We%27re%20interested%20in%20a%20TestPro%20speedup%20sprint.%20" target="_blank" rel="noopener">Book a call about a sprint</a>
         </div>
       </div>
@@ -1696,5 +1674,173 @@ test-pro install</code></pre>
   .hero h1 {
     font-size: 1.9rem;
   }
+}
+
+/* Linear review, 27 Nov: one grid, one type scale, space over lines, one accent */
+.hero-inner {
+  max-width: 960px;
+  grid-template-columns: 1fr 420px;
+  gap: 48px;
+}
+
+.title {
+  font-size: 1.5rem;
+}
+
+.stamp {
+  padding: 3px 7px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+}
+
+.playing .stamp {
+  animation: stamp-soft 0.35s ease-out var(--stamp) forwards;
+}
+
+@keyframes stamp-soft {
+  0% { opacity: 0; transform: translateY(-50%) scale(1.15) rotate(-10deg); }
+  100% { opacity: 1; transform: translateY(-50%) scale(1) rotate(-7deg); }
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hero-lead {
+  max-width: 34em;
+  font-size: 1.0625rem;
+}
+
+.band {
+  padding: 128px 24px;
+}
+
+.hero + .band,
+.band + .band:not(.soft) {
+  border-top: 0;
+}
+
+.band h2 {
+  font-size: 2.25rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.section-lead {
+  max-width: 640px;
+  margin: 0;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.inner.narrow {
+  max-width: 960px;
+}
+
+.inner.narrow > * {
+  max-width: 720px;
+}
+
+.card h3 {
+  font-size: 1.125rem;
+  color: var(--vp-c-text-1);
+}
+
+.stats {
+  justify-items: start;
+}
+
+.stat {
+  text-align: left;
+}
+
+.stat-value {
+  font-size: 2rem;
+  color: var(--vp-c-text-1);
+}
+
+.sprint-stats {
+  margin: 56px 0 0;
+}
+
+.sprint-stats dt a {
+  font-weight: 600;
+}
+
+.sprint-cta {
+  margin-top: 40px;
+  text-align: left;
+}
+
+.plan-note,
+.final-actions {
+  text-align: left;
+}
+
+.plan .btn {
+  margin: 20px 0 4px;
+}
+
+.plan ul {
+  margin-top: 16px;
+}
+
+.badge {
+  background-color: var(--vp-c-default-soft);
+  color: var(--vp-c-text-2);
+}
+
+.assurances li::before {
+  color: var(--vp-c-text-2);
+}
+
+.dot-plot .num {
+  font-family: var(--vp-font-family-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.dark .btn-brand {
+  background-color: #8a5aa8;
+  color: #fff;
+}
+
+.dark .btn-brand:hover {
+  background-color: #9b6bb9;
+}
+
+@media (max-width: 960px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .band {
+    padding: 72px 20px;
+  }
+
+  .band h2 {
+    font-size: 1.75rem;
+  }
+}
+
+.price-was {
+  margin-right: 8px;
+  font-size: 1.25rem;
+  color: var(--vp-c-text-3);
+}
+
+.plan h3 {
+  font-size: 0.8rem;
+  color: var(--vp-c-text-2);
+}
+
+.final-actions {
+  justify-content: flex-start;
 }
 </style>

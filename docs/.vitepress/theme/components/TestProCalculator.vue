@@ -97,11 +97,14 @@ const paybackWeeks = computed(() =>
         </div>
       </dl>
 
-      <p class="calc-assumptions">
+      <details class="calc-details">
+        <summary>Assumptions</summary>
+        <p class="calc-assumptions">
         Assumes {{ plural(developers, 'developer') }} shipping {{ PRS_PER_DAY }} PRs a day with {{ RUNS_PER_PR }} CI runs each, a {{ SPEEDUP }}x faster CI run
         on {{ RUNNERS }} GitHub runners at ${{ RUNNER_PRICE }} a minute, developers waiting for a third of each run,
         and TestPro {{ plan.name }} at {{ dollars.format(plan.price) }} a year.
-      </p>
+        </p>
+      </details>
 
       <a v-if="props.checkoutUrl" class="calc-buy" :href="props.checkoutUrl(plan.key)">Buy {{ plan.name }}</a>
     </div>
@@ -270,5 +273,28 @@ const paybackWeeks = computed(() =>
 .dark .calc-buy {
   background-color: #c4a8d4;
   color: #1b1520;
+}
+
+.calc {
+  align-items: start;
+}
+
+.calc-details {
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+
+.calc-details summary {
+  cursor: pointer;
+}
+
+.calc-details .calc-assumptions {
+  margin-top: 8px;
+}
+
+.dark .calc-buy {
+  background-color: #8a5aa8;
+  color: #fff;
 }
 </style>
